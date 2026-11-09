@@ -45,28 +45,11 @@ O **Quermesse São Judas** reúne esse processo em uma aplicação web: cada col
 
 Apenas **fechamentos aprovados** entram nos totais e comparativos. O compartilhamento é um **snapshot** (retrato de valores na data da liberação), e a revogação remove o acesso às consultas futuras.
 
-### O que foi preservado da aplicação original?
-
-- HTML e CSS visualmente equivalentes à versão V5 original (tons verde/dourado, cartões, layout, menus e imagem);
-- Fluxos de autenticação, administrador e colaborador, envio de fotos, conferência, reenvio e compartilhamento;
-- Integração com as mesmas tabelas, políticas e Edge Function do backend V5.5;
-- Sem obrigatoriedade de migração para React: o frontend usa **JavaScript modular** com Vite para ambiente, build e qualidade de código.
-
-### O que foi acrescentado nesta refatoração?
-
-- Separação de **componentes de interface**, **regras analíticas**, **estado** e **serviços**;
-- Filtros em conferência, gestão de barracas (desativação em vez de exclusão histórica), comparativos e exportação CSV;
-- Demo isolada, com dados fictícios e **sem fazer requisições ao Supabase real**;
-- Variáveis de ambiente e proteção contra publicação de credenciais;
-- Testes automatizados, documentação técnica e fluxo de CI.
-
 ## 🖥️ Demonstração sem dados reais
 
 O modo demo vem ativado por padrão (`VITE_DEMO_MODE=true`). Depois de iniciar o projeto, a tela original de login apresenta botões **Explorar como administrador** e **Explorar como colaborador**. Isso é uma simulação local; não autentica nem consulta informações reais da igreja.
 
 A demo inclui três edições fictícias de quermesse, oito barracas e fechamentos de exemplo. Os dados simulados podem ser alterados no navegador e ficam no `localStorage`; não são registros contábeis e o modo demo **não aplica autenticação ou RLS real**.
-
-> Para demonstrar ao recrutador, hospede **somente** esse modo público. Não inclua variáveis da produção no serviço de hospedagem do portfólio.
 
 ## 🧱 Arquitetura
 
@@ -113,54 +96,13 @@ quermesse-sao-judas/
 └── package.json
 ```
 
-## 🚀 Como executar
-
-**Requisitos:** Node.js 20.19+ e npm. Desenvolvido para execução no Windows, macOS ou Linux.
-
-```bash
-# 1. Entre na pasta extraída
-cd Quermesse_Sao_Judas_Original_Refatorado_V5_5
-
-# 2. Instale dependências
-npm install
-
-# 3. Execute a demo, sem Supabase
-npm run dev
-```
-
-Abra o endereço exibido pelo Vite (normalmente `http://127.0.0.1:5173`). Para Windows PowerShell com restrição de scripts, execute `npm.cmd install` e `npm.cmd run dev`.
-
-```bash
-npm test             # Verificações automatizadas
-npm run scan:secrets # Busca por padrões indevidos de credenciais
-npm run build        # Build de produção (pasta dist/)
-```
-
-### Configurar um Supabase próprio (ambiente privado)
-
-1. Crie **outro projeto Supabase**. Não reaproveite o banco real da igreja em testes públicos.
-2. Confira [docs/DEPLOY.md](docs/DEPLOY.md) e [docs/SECURITY.md](docs/SECURITY.md).
-3. Faça uma **instalação limpa** do SQL em `supabase/migrations/20261109230000_quermesse_v55_fresh_install.sql` **somente no projeto NOVO**. Ele não serve para ser reaplicado no banco existente.
-4. Implante `supabase/functions/invite-collaborator/index.ts` e configure envio de e-mail e URL de redirecionamento de acordo com a documentação do Supabase.
-5. Copie `.env.example` para `.env` e configure:
-
-```dotenv
-VITE_DEMO_MODE=false
-VITE_SUPABASE_URL=https://SEU-PROJETO.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_SUA_CHAVE_PUBLICA
-```
-
-6. Crie e confirme o primeiro usuário no Supabase Auth. O perfil de administrador inicial exige **provisionamento administrativo explícito e verificado** (não há conta ou senha padrão). Consulte [docs/DEPLOY.md](docs/DEPLOY.md).
-
-**Não configure chaves `service_role`, `sb_secret_*`, senhas ou tokens privados em variáveis `VITE_*`: esses valores são embutidos no JavaScript publicado.**
-
 ## 🔐 Segurança e privacidade
 
 O projeto trabalha com uma regra simples: **ocultar um botão não é controle de acesso**.
 
 Na arquitetura real, políticas RLS no PostgreSQL e permissões por coluna restringem operações. O colaborador pode inserir fechamento para sua barraca, mas não recebe `SELECT` dos valores em `closings`. Para acompanhar correções, existe `closing_feedback`, uma tabela sem `amount`/`receipt_path`. A liberação individual expõe somente um resumo em `report_shares`. A Storage privada restringe leitura de comprovantes à administração.
 
-A V5.5 reforça: (1) vínculos de reenvio por usuário, barraca, evento e data; (2) proibição de duas substituições do mesmo fechamento; (3) revisão apenas de `pending` para `approved`/`correction`; (4) imutabilidade de valor e comprovante durante a revisão.
+Reforça: (1) vínculos de reenvio por usuário, barraca, evento e data; (2) proibição de duas substituições do mesmo fechamento; (3) revisão apenas de `pending` para `approved`/`correction`; (4) imutabilidade de valor e comprovante durante a revisão.
 
 | Publicável no GitHub | **Não** publicável |
 |---|---|
@@ -192,15 +134,5 @@ Consulte [docs/TEST_PLAN.md](docs/TEST_PLAN.md) para o roteiro de testes.
 - Indicadores de evolução ao longo dos dias de cada quermesse;
 - Rotina de backups, monitoramento e guia de suporte à equipe da igreja;
 - Acessibilidade e documentação do projeto para manutenção de longo prazo.
-
-## 💼 O que este projeto demonstra para recrutadores?
-
-`JavaScript` · `HTML5` · `CSS3` · `Vite` · `PostgreSQL` · `Supabase` · `SQL` · `RLS` · `Autenticação` · `Autorização` · `GitHub Actions` · `Testes` · `Requisitos` · `Refatoração`
-
-O diferencial é conectar **um problema real**, **regras de acesso de verdade** e **decisões de engenharia documentadas**. O projeto não precisa usar React para ter valor: a refatoração do frontend legado em módulos demonstra manutenção, evolução incremental e cuidado com estabilidade.
-
-> **Descrição para currículo:** “Desenvolvi e evoluí um sistema web de gestão de quermesses com JavaScript, Supabase e PostgreSQL, incluindo autenticação por perfis, controle de fechamentos, validações de integridade, armazenamento privado de comprovantes, relatórios autorizados e comparativos entre edições. Estruturei o frontend em módulos, adotei RLS e documentei decisões de segurança.”
-
----
 
 **Projeto de portfólio independente.** A associação ao contexto da quermesse é descritiva e não representa certificação, publicação oficial ou garantia de aprovação para uso contábil pela instituição. Todos os dados do repositório são fictícios.
