@@ -1,0 +1,80 @@
+name: Demo pública — GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'src/**'
+      - 'public/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.js'
+      - 'tests/**'
+      - 'scripts/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    env:
+      # Valores explícitos: o portfolio NUNCA aponta para a igreja.
+      VITE_DEMO_MODE: 'true'
+      VITE_SUPABASE_URL: ''
+      VITE_SUPABASE_PUBLISHABLE_KEY: ''
+      GITHUB_PAGES: 'true'
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Instalar dependências do lockfile
+        run: npm ci --no-audit --no-fund
+
+      - name: Verificar ambiente isolado
+        run: |
+          node -e "if (process.env.VITE_DEMO_MODE !== 'true' || process.env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_PUBLISHABLE_KEY) { throw new Error('Deploy público exige somente dados fictícios'); }"
+
+      - name: Testar lógica
+        run: npm test
+
+      - name: Procurar credenciais indevidas
+        run: npm run scan:secrets
+
+      - name: Gerar frontend estático
+        run: npm run build
+
+      - name: Verificar saída
+        run: |
+          test -f dist/index.html
+          grep -q '/quermesse-sao-judas/assets/' dist/index.html
+
+      - name: Preparar GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Publicar artefato estático
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ./dist
+
+      - name: Implantar no GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
