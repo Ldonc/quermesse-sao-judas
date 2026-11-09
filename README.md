@@ -10,6 +10,10 @@
   ![Linguagem: JavaScript](https://img.shields.io/badge/frontend-JavaScript%20ES%20Modules-174b38)
   ![Backend: Supabase](https://img.shields.io/badge/backend-Supabase-3ca57c)
   ![Dados da demo: fictícios](https://img.shields.io/badge/demo-dados%20fict%C3%ADcios-2d8c59)
+  ### 🚀 [Acessar demonstração online](https://ldonc.github.io/quermesse-sao-judas/)
+
+Explore o sistema como administrador ou colaborador,
+utilizando dados fictícios e sem necessidade de cadastro.
 
   **Projeto de Engenharia de Software concebido para uma necessidade operacional real:** organizar a gestão de barracas, fechamentos e relatórios de uma quermesse, com respeito aos diferentes níveis de permissão.
 
